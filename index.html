@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Momo Schedule</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --bg: #FAF9F7;
+    --card: #FFFFFF;
+    --border: #E8E6E3;
+    --text: #1A1A1A;
+    --text-secondary: #6B6966;
+    --text-muted: #A09D99;
+    --accent: #E8837C;
+    --accent-light: #FFF0EF;
+    --study: #7C9CE8;
+    --study-light: #EEF2FC;
+    --work: #E8B07C;
+    --work-light: #FFF5EC;
+    --life: #7CE8A3;
+    --life-light: #EDFCF2;
+    --habit: #B07CE8;
+    --habit-light: #F3EDFB;
+    --today: #E8837C;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-hover: 0 4px 12px rgba(0,0,0,0.08);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: 'Noto Sans SC', 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 80px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* Header */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg);
+    padding: 16px 20px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .header-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+
+  .header-date {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 0;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 10px 0;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  /* Content */
+  .content {
+    padding: 16px 20px;
+  }
+
+  /* Month View */
+  .month-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .month-nav button {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 8px;
+  }
+
+  .month-nav .month-label {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .weekday-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  .weekday-header span {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+
+  .cal-day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.15s;
+  }
+
+  .cal-day:hover { background: var(--accent-light); }
+  .cal-day.other-month { color: var(--text-muted); opacity: 0.4; }
+  .cal-day.today { background: var(--today); color: white; font-weight: 700; border-radius: 50%; }
+  .cal-day.selected { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 50%; }
+  .cal-day.has-events::after {
+    content: '';
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--accent);
+    position: absolute;
+    bottom: 4px;
+  }
+  .cal-day.today.has-events::after { background: white; }
+
+  /* Week View */
+  .week-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .week-nav button {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 8px;
+  }
+
+  .week-nav .week-label {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .week-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .week-day-row {
+    background: var(--card);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+  }
+
+  .week-day-row.today-row {
+    border-left: 3px solid var(--today);
+  }
+
+  .week-day-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .week-day-name {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .week-day-date {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .week-day-events {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .week-event-dot {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .week-event-dot .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .week-event-dot .dot.study { background: var(--study); }
+  .week-event-dot .dot.work { background: var(--work); }
+  .week-event-dot .dot.life { background: var(--life); }
+
+  .week-no-events {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  /* Daily View / Todo */
+  .daily-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .daily-date-label {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  .add-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 36px; height: 36px;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow);
+    transition: all 0.15s;
+  }
+
+  .add-btn:hover { box-shadow: var(--shadow-hover); transform: scale(1.05); }
+
+  /* Countdown Section */
+  .countdown-section {
+    margin-bottom: 20px;
+  }
+
+  .countdown-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+
+  .countdown-cards {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .countdown-card {
+    background: var(--card);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    box-shadow: var(--shadow);
+    min-width: 140px;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .countdown-card .cd-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+
+  .countdown-card .cd-days {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .countdown-card .cd-days span {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-muted);
+  }
+
+  .countdown-card .cd-delete {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 14px;
+    cursor: pointer;
+    opacity: 0.5;
+  }
+
+  .countdown-card .cd-delete:hover { opacity: 1; }
+
+  /* Todo Items */
+  .todo-section {
+    margin-bottom: 20px;
+  }
+
+  .todo-section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+
+  .todo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .todo-item {
+    background: var(--card);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.15s;
+  }
+
+  .todo-item.done { opacity: 0.5; }
+  .todo-item.done .todo-text { text-decoration: line-through; }
+
+  .todo-check {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+
+  .todo-check.checked {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .todo-check.checked::after {
+    content: '✓';
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .todo-tag {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+
+  .todo-tag.study { background: var(--study-light); color: var(--study); }
+  .todo-tag.work { background: var(--work-light); color: var(--work); }
+  .todo-tag.life { background: var(--life-light); color: var(--life); }
+
+  .todo-text {
+    flex: 1;
+    font-size: 13px;
+  }
+
+  .todo-time {
+    font-size: 11px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .todo-delete {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 0 4px;
+    opacity: 0.4;
+  }
+
+  .todo-delete:hover { opacity: 1; }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  /* Habit Tracker */
+  .habit-section { margin-bottom: 20px; }
+
+  .habit-card {
+    background: var(--card);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    box-shadow: var(--shadow);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .habit-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .habit-icon {
+    width: 36px; height: 36px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .habit-icon.study { background: var(--study-light); }
+  .habit-icon.work { background: var(--work-light); }
+  .habit-icon.life { background: var(--life-light); }
+  .habit-icon.habit { background: var(--habit-light); }
+
+  .habit-name { font-size: 13px; font-weight: 500; }
+  .habit-streak { font-size: 11px; color: var(--text-muted); }
+
+  .habit-check-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .habit-check-btn.checked {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .habit-check-btn.checked::after {
+    content: '✓';
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .habit-delete {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 14px;
+    cursor: pointer;
+    margin-left: 8px;
+    opacity: 0.4;
+  }
+
+  .habit-delete:hover { opacity: 1; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 200;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: var(--card);
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 24px 20px 40px;
+    width: 100%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    animation: slideUp 0.25s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .modal-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .modal-field {
+    margin-bottom: 16px;
+  }
+
+  .modal-field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+
+  .modal-field input, .modal-field select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-family: inherit;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  .modal-field input:focus, .modal-field select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .modal-actions button {
+    flex: 1;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+  }
+
+  .btn-cancel {
+    background: var(--bg);
+    color: var(--text-secondary);
+  }
+
+  .btn-save {
+    background: var(--accent);
+    color: white;
+  }
+
+  /* Tag selector */
+  .tag-options {
+    display: flex;
+    gap: 8px;
+  }
+
+  .tag-option {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.15s;
+  }
+
+  .tag-option.study { background: var(--study-light); color: var(--study); }
+  .tag-option.work { background: var(--work-light); color: var(--work); }
+  .tag-option.life { background: var(--life-light); color: var(--life); }
+  .tag-option.selected { border-color: currentColor; }
+
+  /* Type selector for modal */
+  .type-options {
+    display: flex;
+    gap: 8px;
+  }
+
+  .type-option {
+    flex: 1;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 2px solid var(--border);
+    text-align: center;
+    transition: all 0.15s;
+    background: var(--bg);
+  }
+
+  .type-option.selected {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 0; height: 0; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="header-title">Momo Schedule</div>
+      <div class="header-date" id="headerDate"></div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" data-view="month">月</button>
+    <button class="tab" data-view="week">周</button>
+    <button class="tab" data-view="daily">今日</button>
+    <button class="tab" data-view="habit">打卡</button>
+  </div>
+</div>
+
+<div class="content" id="content"></div>
+
+<!-- Add Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal"></div>
+</div>
+
+<script>
+const APP_KEY = 'momo-schedule-v1';
+let state = {
+  todos: [],
+  countdowns: [],
+  habits: [],
+  habitLogs: {},
+  currentView: 'month',
+  selectedDate: new Date(),
+  viewMonth: new Date(),
+  viewWeekStart: null,
+};
+
+// Persistence
+function saveState() {
+  try {
+    localStorage.setItem(APP_KEY, JSON.stringify({
+      todos: state.todos,
+      countdowns: state.countdowns,
+      habits: state.habits,
+      habitLogs: state.habitLogs,
+    }));
+  } catch(e) {}
+}
+
+function loadState() {
+  try {
+    const d = JSON.parse(localStorage.getItem(APP_KEY));
+    if (d) {
+      state.todos = d.todos || [];
+      state.countdowns = d.countdowns || [];
+      state.habits = d.habits || [];
+      state.habitLogs = d.habitLogs || {};
+    }
+  } catch(e) {}
+}
+
+// Utils
+function dateStr(d) {
+  const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${dd}`;
+}
+
+function isToday(d) { return dateStr(d) === dateStr(new Date()); }
+function isSameDay(a, b) { return dateStr(a) === dateStr(b); }
+
+const WEEKDAYS = ['日','月','火','水','木','金','土'];
+const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+const TAG_NAMES = { study: '学习', work: '工作', life: '生活' };
+const TAG_COLORS = { study: 'study', work: 'work', life: 'life' };
+
+function getMonday(d) {
+  const dt = new Date(d);
+  const day = dt.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  dt.setDate(dt.getDate() + diff);
+  dt.setHours(0,0,0,0);
+  return dt;
+}
+
+function getTodosForDate(ds) {
+  return state.todos.filter(t => t.date === ds);
+}
+
+function daysUntil(dateString) {
+  const target = new Date(dateString + 'T00:00:00');
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  return Math.ceil((target - today) / (1000*60*60*24));
+}
+
+function getStreak(habitId) {
+  let streak = 0;
+  const today = new Date();
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const key = `${habitId}_${dateStr(d)}`;
+    if (state.habitLogs[key]) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
+// Header
+function updateHeader() {
+  const now = new Date();
+  document.getElementById('headerDate').textContent =
+    `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 ${WEEKDAYS[now.getDay()]}曜日`;
+}
+
+// Tabs
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    state.currentView = tab.dataset.view;
+    if (state.currentView === 'daily') {
+      state.selectedDate = new Date();
+    }
+    render();
+  });
+});
+
+// Render
+function render() {
+  const content = document.getElementById('content');
+  switch (state.currentView) {
+    case 'month': content.innerHTML = renderMonth(); break;
+    case 'week': content.innerHTML = renderWeek(); break;
+    case 'daily': content.innerHTML = renderDaily(); break;
+    case 'habit': content.innerHTML = renderHabit(); break;
+  }
+  bindEvents();
+}
+
+// Month View
+function renderMonth() {
+  const vm = state.viewMonth;
+  const year = vm.getFullYear(), month = vm.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const startDay = firstDay.getDay();
+  const daysInMonth = lastDay.getDate();
+  const prevMonthLastDay = new Date(year, month, 0).getDate();
+
+  let html = `
+    <div class="month-nav">
+      <button onclick="changeMonth(-1)">‹</button>
+      <span class="month-label">${year}年${MONTHS[month]}</span>
+      <button onclick="changeMonth(1)">›</button>
+    </div>
+    <div class="weekday-header">
+      ${WEEKDAYS.map(w => `<span>${w}</span>`).join('')}
+    </div>
+    <div class="calendar-grid">
+  `;
+
+  // Previous month days
+  for (let i = startDay - 1; i >= 0; i--) {
+    const day = prevMonthLastDay - i;
+    html += `<div class="cal-day other-month">${day}</div>`;
+  }
+
+  // Current month days
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(year, month, d);
+    const ds = dateStr(date);
+    const todayCls = isToday(date) ? 'today' : '';
+    const selectedCls = isSameDay(date, state.selectedDate) && !isToday(date) ? 'selected' : '';
+    const hasEvents = getTodosForDate(ds).length > 0 ? 'has-events' : '';
+    html += `<div class="cal-day ${todayCls} ${selectedCls} ${hasEvents}" data-date="${ds}" onclick="selectDate('${ds}')">${d}</div>`;
+  }
+
+  // Next month days
+  const totalCells = startDay + daysInMonth;
+  const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+  for (let i = 1; i <= remaining; i++) {
+    html += `<div class="cal-day other-month">${i}</div>`;
+  }
+
+  html += '</div>';
+
+  // Selected date todos
+  const ds = dateStr(state.selectedDate);
+  const todos = getTodosForDate(ds);
+  const selDate = state.selectedDate;
+
+  html += `
+    <div style="margin-top:20px">
+      <div class="daily-header">
+        <div class="daily-date-label">${selDate.getMonth()+1}月${selDate.getDate()}日 ${WEEKDAYS[selDate.getDay()]}曜日</div>
+        <button class="add-btn" onclick="showAddModal()">+</button>
+      </div>
+  `;
+
+  if (todos.length === 0) {
+    html += '<div class="empty-state">没有日程，点 + 添加</div>';
+  } else {
+    html += '<div class="todo-list">';
+    todos.forEach(t => {
+      html += renderTodoItem(t);
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+
+  return html;
+}
+
+function renderTodoItem(t) {
+  const doneCls = t.done ? 'done' : '';
+  const checkedCls = t.done ? 'checked' : '';
+  return `
+    <div class="todo-item ${doneCls}">
+      <div class="todo-check ${checkedCls}" onclick="toggleTodo('${t.id}')"></div>
+      <span class="todo-tag ${t.tag}">${TAG_NAMES[t.tag]}</span>
+      <span class="todo-text">${t.text}</span>
+      ${t.time ? `<span class="todo-time">${t.time}</span>` : ''}
+      <button class="todo-delete" onclick="deleteTodo('${t.id}')">×</button>
+    </div>
+  `;
+}
+
+// Week View
+function renderWeek() {
+  if (!state.viewWeekStart) {
+    state.viewWeekStart = getMonday(new Date());
+  }
+  const ws = state.viewWeekStart;
+  const we = new Date(ws);
+  we.setDate(we.getDate() + 6);
+
+  let html = `
+    <div class="week-nav">
+      <button onclick="changeWeek(-1)">‹</button>
+      <span class="week-label">${ws.getMonth()+1}/${ws.getDate()} - ${we.getMonth()+1}/${we.getDate()}</span>
+      <button onclick="changeWeek(1)">›</button>
+    </div>
+    <div class="week-grid">
+  `;
+
+  for (let i = 0; i < 7; i++) {
+    const day = new Date(ws);
+    day.setDate(day.getDate() + i);
+    const ds = dateStr(day);
+    const todos = getTodosForDate(ds);
+    const todayCls = isToday(day) ? 'today-row' : '';
+
+    html += `
+      <div class="week-day-row ${todayCls}" onclick="goToDate('${ds}')">
+        <div class="week-day-header">
+          <span class="week-day-name">${WEEKDAYS[day.getDay()]}曜日</span>
+          <span class="week-day-date">${day.getMonth()+1}/${day.getDate()}</span>
+        </div>
+        <div class="week-day-events">
+    `;
+
+    if (todos.length === 0) {
+      html += '<div class="week-no-events">—</div>';
+    } else {
+      todos.slice(0, 3).forEach(t => {
+        html += `<div class="week-event-dot"><span class="dot ${t.tag}"></span>${t.text}</div>`;
+      });
+      if (todos.length > 3) {
+        html += `<div class="week-event-dot" style="color:var(--text-muted)">+${todos.length - 3} 件</div>`;
+      }
+    }
+
+    html += '</div></div>';
+  }
+
+  html += '</div>';
+  return html;
+}
+
+// Daily View
+function renderDaily() {
+  const today = new Date();
+  const ds = dateStr(today);
+  const todos = getTodosForDate(ds);
+
+  let html = '';
+
+  // Countdowns
+  if (state.countdowns.length > 0) {
+    html += `
+      <div class="countdown-section">
+        <div class="countdown-title">倒计时</div>
+        <div class="countdown-cards">
+    `;
+    state.countdowns.forEach(cd => {
+      const days = daysUntil(cd.date);
+      html += `
+        <div class="countdown-card">
+          <button class="cd-delete" onclick="deleteCountdown('${cd.id}')">×</button>
+          <div class="cd-label">${cd.name}</div>
+          <div class="cd-days">${days < 0 ? '已过' : days} <span>${days < 0 ? '' : '天'}</span></div>
+        </div>
+      `;
+    });
+    html += `</div></div>`;
+  }
+
+  // Add countdown button
+  html += `<button style="background:none;border:1px dashed var(--border);border-radius:var(--radius-sm);padding:8px 16px;font-size:12px;color:var(--text-muted);cursor:pointer;margin-bottom:20px;width:100%" onclick="showCountdownModal()">+ 添加倒计时</button>`;
+
+  // Today's todos
+  html += `
+    <div class="todo-section">
+      <div class="daily-header">
+        <div class="todo-section-title">今日待办</div>
+        <button class="add-btn" onclick="showAddModal()" style="width:30px;height:30px;font-size:16px">+</button>
+      </div>
+      <div class="todo-list">
+  `;
+
+  if (todos.length === 0) {
+    html += '<div class="empty-state">今天没有待办</div>';
+  } else {
+    const undone = todos.filter(t => !t.done);
+    const done = todos.filter(t => t.done);
+    undone.forEach(t => { html += renderTodoItem(t); });
+    done.forEach(t => { html += renderTodoItem(t); });
+  }
+
+  html += '</div></div>';
+  return html;
+}
+
+// Habit View
+function renderHabit() {
+  const ds = dateStr(new Date());
+  let html = `
+    <div class="habit-section">
+      <div class="daily-header">
+        <div class="todo-section-title">今日打卡</div>
+        <button class="add-btn" onclick="showHabitModal()" style="width:30px;height:30px;font-size:16px">+</button>
+      </div>
+  `;
+
+  if (state.habits.length === 0) {
+    html += '<div class="empty-state">还没有习惯，点 + 添加</div>';
+  } else {
+    state.habits.forEach(h => {
+      const key = `${h.id}_${ds}`;
+      const checked = state.habitLogs[key] ? 'checked' : '';
+      const streak = getStreak(h.id);
+
+      html += `
+        <div class="habit-card">
+          <div class="habit-info">
+            <div class="habit-icon ${h.tag || 'habit'}">${h.icon || '⭐'}</div>
+            <div>
+              <div class="habit-name">${h.name}</div>
+              <div class="habit-streak">${streak > 0 ? `连续 ${streak} 天` : '今天开始'}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center">
+            <button class="habit-check-btn ${checked}" onclick="toggleHabit('${h.id}')"></button>
+            <button class="habit-delete" onclick="deleteHabit('${h.id}')">×</button>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  // Habit history - last 7 days
+  if (state.habits.length > 0) {
+    html += '<div style="margin-top:24px"><div class="todo-section-title">最近7天</div>';
+    html += '<div style="background:var(--card);border-radius:var(--radius-sm);padding:14px;box-shadow:var(--shadow)">';
+
+    // Header row
+    html += '<div style="display:grid;grid-template-columns:80px repeat(7,1fr);gap:4px;text-align:center;margin-bottom:8px">';
+    html += '<div></div>';
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      html += `<div style="font-size:10px;color:var(--text-muted)">${d.getDate()}日</div>`;
+    }
+    html += '</div>';
+
+    // Each habit row
+    state.habits.forEach(h => {
+      html += `<div style="display:grid;grid-template-columns:80px repeat(7,1fr);gap:4px;text-align:center;align-items:center;margin-bottom:4px">`;
+      html += `<div style="font-size:11px;text-align:left;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${h.name}</div>`;
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const key = `${h.id}_${dateStr(d)}`;
+        const done = state.habitLogs[key];
+        html += `<div style="font-size:14px">${done ? '✅' : '·'}</div>`;
+      }
+      html += '</div>';
+    });
+
+    html += '</div></div>';
+  }
+
+  html += '</div>';
+  return html;
+}
+
+// Actions
+function changeMonth(dir) {
+  state.viewMonth.setMonth(state.viewMonth.getMonth() + dir);
+  render();
+}
+
+function changeWeek(dir) {
+  state.viewWeekStart.setDate(state.viewWeekStart.getDate() + (dir * 7));
+  render();
+}
+
+function selectDate(ds) {
+  state.selectedDate = new Date(ds + 'T00:00:00');
+  render();
+}
+
+function goToDate(ds) {
+  state.selectedDate = new Date(ds + 'T00:00:00');
+  state.currentView = 'daily';
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.view === 'daily');
+  });
+  // Actually show that date's todos in month view
+  state.currentView = 'month';
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.view === 'month');
+  });
+  state.viewMonth = new Date(state.selectedDate);
+  render();
+}
+
+function toggleTodo(id) {
+  const todo = state.todos.find(t => t.id === id);
+  if (todo) { todo.done = !todo.done; saveState(); render(); }
+}
+
+function deleteTodo(id) {
+  state.todos = state.todos.filter(t => t.id !== id);
+  saveState(); render();
+}
+
+function deleteCountdown(id) {
+  state.countdowns = state.countdowns.filter(c => c.id !== id);
+  saveState(); render();
+}
+
+function toggleHabit(id) {
+  const ds = dateStr(new Date());
+  const key = `${id}_${ds}`;
+  state.habitLogs[key] = !state.habitLogs[key];
+  saveState(); render();
+}
+
+function deleteHabit(id) {
+  state.habits = state.habits.filter(h => h.id !== id);
+  // Clean up logs
+  Object.keys(state.habitLogs).forEach(k => {
+    if (k.startsWith(id + '_')) delete state.habitLogs[k];
+  });
+  saveState(); render();
+}
+
+// Modals
+function showModal(html) {
+  document.getElementById('modal').innerHTML = html;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function hideModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('modalOverlay')) hideModal();
+});
+
+function showAddModal() {
+  const ds = dateStr(state.selectedDate);
+  showModal(`
+    <div class="modal-title">添加日程</div>
+    <div class="modal-field">
+      <label>内容</label>
+      <input type="text" id="todoText" placeholder="要做什么？">
+    </div>
+    <div class="modal-field">
+      <label>日期</label>
+      <input type="date" id="todoDate" value="${ds}">
+    </div>
+    <div class="modal-field">
+      <label>时间（可选）</label>
+      <input type="time" id="todoTime">
+    </div>
+    <div class="modal-field">
+      <label>分类</label>
+      <div class="tag-options">
+        <div class="tag-option study selected" onclick="selectTag(this,'study')">学习</div>
+        <div class="tag-option work" onclick="selectTag(this,'work')">工作</div>
+        <div class="tag-option life" onclick="selectTag(this,'life')">生活</div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="hideModal()">取消</button>
+      <button class="btn-save" onclick="saveTodo()">保存</button>
+    </div>
+  `);
+  setTimeout(() => document.getElementById('todoText').focus(), 300);
+}
+
+let selectedTag = 'study';
+
+function selectTag(el, tag) {
+  document.querySelectorAll('.tag-option').forEach(t => t.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedTag = tag;
+}
+
+function saveTodo() {
+  const text = document.getElementById('todoText').value.trim();
+  const date = document.getElementById('todoDate').value;
+  const time = document.getElementById('todoTime').value;
+  if (!text) return;
+
+  state.todos.push({
+    id: Date.now().toString(36),
+    text, date, time,
+    tag: selectedTag,
+    done: false,
+  });
+
+  // Update selected date to match
+  state.selectedDate = new Date(date + 'T00:00:00');
+  saveState(); hideModal(); render();
+}
+
+function showCountdownModal() {
+  showModal(`
+    <div class="modal-title">添加倒计时</div>
+    <div class="modal-field">
+      <label>事件名称</label>
+      <input type="text" id="cdName" placeholder="比如：N1考试">
+    </div>
+    <div class="modal-field">
+      <label>日期</label>
+      <input type="date" id="cdDate">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="hideModal()">取消</button>
+      <button class="btn-save" onclick="saveCountdown()">保存</button>
+    </div>
+  `);
+}
+
+function saveCountdown() {
+  const name = document.getElementById('cdName').value.trim();
+  const date = document.getElementById('cdDate').value;
+  if (!name || !date) return;
+
+  state.countdowns.push({
+    id: Date.now().toString(36),
+    name, date,
+  });
+  saveState(); hideModal(); render();
+}
+
+function showHabitModal() {
+  showModal(`
+    <div class="modal-title">添加习惯</div>
+    <div class="modal-field">
+      <label>习惯名称</label>
+      <input type="text" id="habitName" placeholder="比如：N1学习30分钟">
+    </div>
+    <div class="modal-field">
+      <label>图标</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${['📚','💪','🧘','💅','🎵','🏃','✍️','🎯'].map((e,i) =>
+          `<div class="tag-option ${i===0?'selected':''}" style="padding:8px 12px;font-size:18px" onclick="selectIcon(this,'${e}')">${e}</div>`
+        ).join('')}
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="hideModal()">取消</button>
+      <button class="btn-save" onclick="saveHabit()">保存</button>
+    </div>
+  `);
+}
+
+let selectedIcon = '📚';
+
+function selectIcon(el, icon) {
+  el.parentElement.querySelectorAll('.tag-option').forEach(t => t.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedIcon = icon;
+}
+
+function saveHabit() {
+  const name = document.getElementById('habitName').value.trim();
+  if (!name) return;
+
+  state.habits.push({
+    id: Date.now().toString(36),
+    name,
+    icon: selectedIcon,
+    tag: 'habit',
+  });
+  saveState(); hideModal(); render();
+}
+
+function bindEvents() {}
+
+// Init
+loadState();
+updateHeader();
+render();
+</script>
+</body>
+</html>
