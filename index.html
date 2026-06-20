@@ -62,6 +62,55 @@
     margin-bottom: 12px;
   }
 
+  .settings-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px 8px;
+  }
+
+  .data-modal-content {
+    padding: 20px;
+  }
+
+  .data-modal-content h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--text);
+  }
+
+  .data-btn {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 10px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--bg);
+    font-size: 14px;
+    color: var(--text);
+    cursor: pointer;
+    text-align: center;
+  }
+
+  .data-btn:active {
+    background: var(--accent-light);
+  }
+
+  .data-btn-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: 6px;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+  }
+
   .header-title {
     font-size: 20px;
     font-weight: 700;
@@ -677,6 +726,7 @@
       <div class="header-title">Momo Schedule</div>
       <div class="header-date" id="headerDate"></div>
     </div>
+    <button class="settings-btn" onclick="showDataModal()">⚙</button>
   </div>
   <div class="tabs">
     <button class="tab active" data-view="month">月</button>
@@ -728,6 +778,63 @@ function loadState() {
       state.habitLogs = d.habitLogs || {};
     }
   } catch(e) {}
+}
+
+// Data Management
+function showDataModal() {
+  const modal = document.getElementById('modal');
+  modal.innerHTML = `
+    <div class="data-modal-content">
+      <h3>数据管理</h3>
+      <button class="data-btn" onclick="exportData()">导出数据</button>
+      <button class="data-btn" onclick="triggerImport()">导入数据</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+      <button class="data-btn-close" onclick="closeModal()">关闭</button>
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('active');
+}
+
+function exportData() {
+  const data = localStorage.getItem(APP_KEY);
+  if (!data) { alert('没有数据可以导出'); return; }
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'momo-schedule-backup.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function triggerImport() {
+  document.getElementById('importFile').click();
+}
+
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      const d = JSON.parse(ev.target.result);
+      if (d.todos || d.habits || d.countdowns) {
+        localStorage.setItem(APP_KEY, JSON.stringify(d));
+        state.todos = d.todos || [];
+        state.countdowns = d.countdowns || [];
+        state.habits = d.habits || [];
+        state.habitLogs = d.habitLogs || {};
+        closeModal();
+        render();
+        alert('导入成功！');
+      } else {
+        alert('文件格式不对');
+      }
+    } catch(err) {
+      alert('导入失败：' + err.message);
+    }
+  };
+  reader.readAsText(file);
 }
 
 // Utils
