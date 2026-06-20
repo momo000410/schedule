@@ -24,6 +24,8 @@
     --work-light: #FFF5EC;
     --life: #7CE8A3;
     --life-light: #EDFCF2;
+    --health: #E87CA0;
+    --health-light: #FCEEF3;
     --habit: #B07CE8;
     --habit-light: #F3EDFB;
     --today: #E8837C;
@@ -251,6 +253,7 @@
   .week-event-dot .dot.study { background: var(--study); }
   .week-event-dot .dot.work { background: var(--work); }
   .week-event-dot .dot.life { background: var(--life); }
+  .week-event-dot .dot.health { background: var(--health); }
 
   .week-no-events {
     font-size: 12px;
@@ -419,6 +422,7 @@
   .todo-tag.study { background: var(--study-light); color: var(--study); }
   .todo-tag.work { background: var(--work-light); color: var(--work); }
   .todo-tag.life { background: var(--life-light); color: var(--life); }
+  .todo-tag.health { background: var(--health-light); color: var(--health); }
 
   .todo-text {
     flex: 1;
@@ -482,6 +486,7 @@
   .habit-icon.study { background: var(--study-light); }
   .habit-icon.work { background: var(--work-light); }
   .habit-icon.life { background: var(--life-light); }
+  .habit-icon.health { background: var(--health-light); }
   .habit-icon.habit { background: var(--habit-light); }
 
   .habit-name { font-size: 13px; font-weight: 500; }
@@ -633,6 +638,7 @@
   .tag-option.study { background: var(--study-light); color: var(--study); }
   .tag-option.work { background: var(--work-light); color: var(--work); }
   .tag-option.life { background: var(--life-light); color: var(--life); }
+  .tag-option.health { background: var(--health-light); color: var(--health); }
   .tag-option.selected { border-color: currentColor; }
 
   /* Type selector for modal */
@@ -735,8 +741,8 @@ function isSameDay(a, b) { return dateStr(a) === dateStr(b); }
 
 const WEEKDAYS = ['日','月','火','水','木','金','土'];
 const MONTHS = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-const TAG_NAMES = { study: '学习', work: '工作', life: '生活' };
-const TAG_COLORS = { study: 'study', work: 'work', life: 'life' };
+const TAG_NAMES = { study: '学习', work: '工作', life: '生活', health: '健康' };
+const TAG_COLORS = { study: 'study', work: 'work', life: 'life', health: 'health' };
 
 function getMonday(d) {
   const dt = new Date(d);
